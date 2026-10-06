@@ -1,0 +1,38 @@
+# Node & Bun
+node_modules/
+bun.lockb
+dist/
+*.tsbuildinfo
+
+# Sensitive credentials & stores
+credentials.json
+/stores/
+data/accounts.json
+data/supervisor-state.json
+data/supervisor.pid
+.env
+*.env
+*.key
+*.pem
+
+# Configuration & Runtime State
+config.yaml
+/config/
+config.test.yaml
+/logs/
+*.log
+__pycache__/
+*.pyc
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Build artifacts & binaries
+/zcode-proxy.exe
+/zcode-proxy-linux-*
+/zcode-proxy-darwin-*
+src/proxy/captcha-worker-entry.bundle.js
+docker-compose.multi.yml

@@ -1,0 +1,25 @@
+{
+  "app": "zcode-proxy-fleet",
+  "count": 2,
+  "dashboardToken": "example-dashboard-token",
+  "instances": [
+    {
+      "id": "01",
+      "port": 8080,
+      "store": "stores/account-01",
+      "apiKey": "your-proxy-api-key-01",
+      "credentialSecret": "example-random-secret-01",
+      "proxy": null,
+      "signedIn": false
+    },
+    {
+      "id": "02",
+      "port": 8081,
+      "store": "stores/account-02",
+      "apiKey": "your-proxy-api-key-02",
+      "credentialSecret": "example-random-secret-02",
+      "proxy": null,
+      "signedIn": false
+    }
+  ]
+}

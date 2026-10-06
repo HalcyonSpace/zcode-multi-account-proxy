@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  zcode-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: zcode-proxy:latest
+    container_name: zcode-proxy
+    restart: unless-stopped
+    ports:
+      - "${PROXY_PORT:-8080}:8080"
+    volumes:
+      - ./stores/account-01:/store
+      - ./config:/data
+    environment:
+      - ZCODE_PROXY_PORT=8080
+      - ZCODE_PROXY_API_KEY=${PROXY_API_KEY:-change-me}
+      - ZCODE_PROXY_STORE_DIR=/store
+      - ZCODE_PROXY_CREDENTIAL_SECRET=${CREDENTIAL_SECRET:-change-me}
+      - BUN_JSC_useJIT=0
+      - CAPTCHA_SOLVER_MODE=child
+      - CAPTCHA_CHILD_BATCH=2
+      - CAPTCHA_CHILD_CONCURRENCY=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  zcode-dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: zcode-dashboard
+    restart: unless-stopped
+    ports:
+      - "${DASHBOARD_PORT:-39777}:39777"
+    volumes:
+      - ./data:/app/data
+      - ./stores:/app/stores
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DASHBOARD_PORT=39777
+      - DASHBOARD_BIND=0.0.0.0
+      - DATA_DIR=/app/data
+      - STORES_DIR=/app/stores
+      - LOGS_DIR=/app/logs
+      - ZCODE_BACKEND=docker
+      - ZCODE_PROXY_HOST=zcode-proxy
+    depends_on:
+      - zcode-proxy
