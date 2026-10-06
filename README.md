@@ -34,8 +34,9 @@ several accounts side by side.
 | **Claimable trial plans** | Yes, optional | The claim helper can pick up claimable trial / weekend plans (`claim` section of the config). |
 | **Off-peak (idle) plan** | Yes, optional | Async off-peak channel (`async` section of the config). |
 
-> **Gmail only:** Start-Plan sign-in currently works only with Google / Gmail
-> (`@gmail.com`) accounts. Other email providers are not supported.
+> **You need a Gmail account.** ZCode sign-in currently works only with Google / Gmail
+> (`@gmail.com`) accounts, and a new account signed in this way gets the **free 5-day
+> starter plan**. Other email providers are not supported.
 
 ---
 
@@ -170,6 +171,32 @@ child-process solver (now) ███                               ~66–96 MB, 
 | Machine load average | 0.55 on 4 cores |
 | Time to first byte | 1.5 – 4.4 s |
 | Streaming speed (glm-5.3-flash) | 14 – 45 tokens/s |
+
+### How many accounts can one machine run?
+
+Estimated from the measurements above. Only 5 accounts were actually measured; larger
+numbers are extrapolated, so leave headroom.
+
+Budget per account: **~200 MB RAM** (proxy at its ~96 MB peak plus a ~100 MB captcha child
+while it solves) and **~0.11 CPU cores** under live use (5 accounts gave a 0.55 load average).
+Fixed cost: **~1 GB** for the OS and Docker, plus **~70 MB** for the dashboard and supervisor.
+
+```
+accounts ≈ min( (RAM_GB − 1.1) / 0.2 ,  CPU_cores × 8 )
+```
+
+| Machine | RAM limit | CPU limit | **Recommended max** |
+| --- | --- | --- | --- |
+| 1 vCPU / 2 GB | 4 | 8 | **4 accounts** |
+| 2 vCPU / 4 GB | 14 | 16 | **14 accounts** |
+| 4 cores / 8 GB | 34 | 32 | **32 accounts** |
+| 4 cores / 16 GB | 74 | 32 | **32 accounts** |
+| 8 cores / 16 GB | 74 | 64 | **64 accounts** |
+
+- Accounts parked by the supervisor (quota empty) use almost no RAM or CPU, so you can
+  register more slots than this, as long as only that many are awake at once.
+- These limits cover your hardware only. The upstream service may rate-limit many
+  accounts coming from one IP; that was not measured.
 
 ### Why memory stays flat
 
