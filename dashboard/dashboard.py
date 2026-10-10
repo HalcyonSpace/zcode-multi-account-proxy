@@ -246,6 +246,20 @@ def snapshot():
         if online and "data" in q:
             d = q["data"]
             entry["account"] = d.get("account")
+            entry["codingPlan"] = d.get("codingPlan")
+            entry["plans"] = d.get("plans") or []
+            entry["models"] = []
+            try:
+                host = os.environ.get("ZCODE_PROXY_HOST", "127.0.0.1")
+                req = urllib.request.Request(
+                    f"http://{host}:{i.get('port', 8080)}/v1/models?client_version=pi",
+                    headers={"Authorization": "Bearer " + i.get("apiKey", "")},
+                )
+                with urllib.request.urlopen(req, timeout=4) as response:
+                    catalog = json.load(response)
+                entry["models"] = [{"id": m.get("slug"), "context": m.get("context_window"), "output": m.get("max_tokens")} for m in catalog.get("models", [])]
+            except Exception:
+                pass
             for b in d.get("balances", []):
                 name = b.get("showName", "Unknown")
                 used = b.get("usedUnits", 0)
@@ -628,8 +642,16 @@ HTML_TEMPLATE = r"""<!doctype html>
                 </th>
               </tr>`;
 
-          if (a.state === 'online' && a.balances.length > 0) {
-            acctHtml += '<tr><th>Bucket</th><th>Used</th><th>Total</th><th>Remaining</th><th>Renewal / Expiry</th></tr>';
+          if (a.state === 'online' && (a.balances.length > 0 || a.codingPlan)) {
+            acctHtml += '<tr><th>Bucket</th><th>Used</th><th>Total</th><th>Remaining</th><th>Quota resets</th></tr>';
+            if (a.codingPlan) {
+              acctHtml += `<tr><td colspan="5"><strong>Coding plan: ${esc(a.codingPlan.level || 'Unknown')}</strong></td></tr>`;
+              for (const l of a.codingPlan.limits || []) {
+                const pct = l.percentage == null ? null : Number(l.percentage);
+                const valid = pct !== null && Number.isFinite(pct);
+                acctHtml += `<tr><td>${esc(l.type)}${l.total == null ? '' : ' · window ' + esc(l.total)}</td><td>${valid ? pct + '%' : 'Not supplied'}</td><td>100%</td><td>${valid ? Math.max(0, 100 - pct) + '%' : 'Not supplied'}${l.type === 'CREDIT_LIMIT' && l.remaining != null ? ' · ' + fmt(l.remaining) + ' credits' : ''}</td><td>${l.nextResetTime ? new Date(l.nextResetTime).toLocaleString() : 'Not supplied'}</td></tr>`;
+              }
+            }
             for (const b of a.balances) {
               const pct = b.total ? Math.min(100, Math.round(100 * b.used / b.total)) : 0;
               acctHtml += `
@@ -647,6 +669,12 @@ HTML_TEMPLATE = r"""<!doctype html>
           } else {
             const reason = a.detail || (a.signedIn ? 'Service stopped' : 'Not signed in');
             acctHtml += `<tr><td colspan="5" style="color:var(--muted)">${esc(reason)}</td></tr>`;
+          }
+          for (const plan of a.plans || []) {
+            acctHtml += `<tr><td colspan="5"><strong>Plan expires:</strong> ${plan.endsAt ? esc(ts(plan.endsAt)) : 'Not supplied'} · Started: ${plan.startsAt ? esc(ts(plan.startsAt)) : 'Not supplied'} · ${esc(plan.planId)}</td></tr>`;
+          }
+          if (a.models && a.models.length) {
+            acctHtml += `<tr><td colspan="5"><details><summary>Model context / output limits (configured catalog; not measured)</summary><table><tr><th>Model</th><th>Context tokens</th><th>Max output tokens</th></tr>${a.models.map(m => `<tr><td>${esc(m.id)}</td><td>${fmt(m.context)}</td><td>${m.output == null ? 'Not supplied' : fmt(m.output)}</td></tr>`).join('')}</table></details></td></tr>`;
           }
           acctHtml += '</table>';
         }

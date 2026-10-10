@@ -85,6 +85,7 @@ export interface QuotaSnapshot {
    */
   jwt: { ageHours: number; issuedAt: number } | null;
   account?: { emailMasked: string | null; name: string | null } | null;
+  plans?: { planId: string; startsAt?: number; endsAt?: number }[];
   balances: QuotaBalanceEntry[];
   claimablePlans: QuotaPlanEntry[];
   /**
@@ -226,7 +227,7 @@ export async function collectQuotaSnapshot(
   }
 
   const balances: QuotaBalanceEntry[] = [];
-  const balanceData = (balance?.data ?? {}) as { balances?: any[]; server_time?: number };
+  const balanceData = (balance?.data ?? {}) as { balances?: any[]; plans?: Record<string, unknown>[]; server_time?: number };
   for (const b of Array.isArray(balanceData.balances) ? balanceData.balances : []) {
     // unitType/expiresAt camelCase aliases observed live alongside snake_case;
     // accept both so neither casing drops the field.
@@ -267,6 +268,7 @@ export async function collectQuotaSnapshot(
     account: cred?.email || cred?.name
       ? { emailMasked: cred.email ? maskEmail(cred.email) : null, name: cred.name ?? null }
       : null,
+    plans: (Array.isArray(balanceData.plans) ? balanceData.plans : []).map((p: Record<string, unknown>) => ({ planId: String(p.plan_id ?? ""), startsAt: toFiniteNumber(p.starts_at), endsAt: toFiniteNumber(p.ends_at) })),
     balances,
     claimablePlans,
     codingPlan,
