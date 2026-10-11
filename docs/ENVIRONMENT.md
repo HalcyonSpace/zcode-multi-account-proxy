@@ -98,3 +98,11 @@ running `dashboard/dashboard.py` or `dashboard/supervisor.py` outside Docker.
 
 Never commit `.env`, `stores/`, `data/` or `config/` – they hold your keys and logins.
 They are already in `.gitignore`.
+
+
+## Optional fleet routing
+
+| Variable | Purpose | How to set |
+| --- | --- | --- |
+| `ZCODE_FLEET_REGISTRY` | Local JSON registry containing each slot's id, port and API key. Enables free-first routing on chat, messages and Responses endpoints. | Set an absolute container/host path to `data/accounts.json`; mount it privately if using Docker. Leave unset for single-account operation. |
+| `ZCODE_FLEET_INTERNAL_SECRET` | Shared secret used to prevent recursive proxy forwarding. | Generate a random string and set the same value in all participating proxy processes. Never publish it. |

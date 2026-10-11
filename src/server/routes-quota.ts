@@ -75,6 +75,7 @@ export interface QuotaCodingPlan {
 }
 
 export interface QuotaSnapshot {
+  plan?: string;
   provider: string;
   serverTime: number;
   /**
@@ -262,6 +263,7 @@ export async function collectQuotaSnapshot(
   }
 
   return {
+    plan: config.plan,
     provider: config.provider,
     serverTime: toFiniteNumber(balanceData.server_time) ?? Math.floor(Date.now() / 1000),
     jwt,

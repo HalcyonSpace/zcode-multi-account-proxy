@@ -7,6 +7,7 @@
  *
  * @see .omo/plans/zcode-proxy.md Task 7
  */
+import { quotaPriority } from "./quota-priority.js";
 import { createServer, type Server } from "node:http";
 import { Readable } from "node:stream";
 import { timingSafeEqual } from "node:crypto";
@@ -94,10 +95,10 @@ export function createFetchHandler(opts: ServerOptions): (req: Request) => Promi
     // --- Routing ---
 
     if (path === "/v1/chat/completions" && method === "POST") {
-      return handleChatCompletions(req, proxyOpts);
+      return quotaPriority(req, () => handleChatCompletions(req, proxyOpts));
     }
     if (config.responses.enabled && path === "/v1/responses" && method === "POST") {
-      return handleResponsesRoute(req, responsesOpts);
+      return quotaPriority(req, () => handleResponsesRoute(req, responsesOpts));
     }
     if (path === "/v1/models" && method === "GET") {
       return handleListModels(req);
@@ -108,7 +109,7 @@ export function createFetchHandler(opts: ServerOptions): (req: Request) => Promi
     }
 
     if (path === "/v1/messages" && method === "POST") {
-      return handleMessages(req, proxyOpts);
+      return quotaPriority(req, () => handleMessages(req, proxyOpts));
     }
 
     if (config.async.enabled) {

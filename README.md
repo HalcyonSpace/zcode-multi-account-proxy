@@ -241,3 +241,28 @@ All environment variables (what each does and how to set it): **[docs/ENVIRONMEN
 
 Free, non-commercial project. Unofficial, not affiliated with ZCode, Z.ai or Zhipu. Use only with accounts
 you own and within the provider's terms of service.
+
+
+## Free-first quota routing (optional)
+
+Set `ZCODE_FLEET_REGISTRY` to your local fleet registry (`data/accounts.json`) and
+set the same random `ZCODE_FLEET_INTERNAL_SECRET` on every participating proxy.
+Keep both settings private; do not commit the registry or secret.
+
+The router preserves the requested model. It selects a matching nonempty, unexpired
+promo bucket first (earliest bucket expiry first), then falls back to a paid coding-plan
+account. Explicit quota/authentication rejections can try another account; ambiguous
+network failures are not replayed. Quota snapshots are cached for 10 seconds.
+
+**Current limitation:** a coding-plan-configured account's promo buckets are not used
+by that route. Separate start-plan execution for the same paid account is not yet
+implemented. Published model context sizes are configured catalog values, not verified
+maximum context measurements.
+
+### Live dashboard
+
+![Live quota dashboard with private identifiers redacted](docs/images/dashboard-live.png)
+
+Captured from a running deployment. Account identities, ports and calendar timestamps
+are redacted for privacy. Quota values are live, not fabricated. Daily quota reset and
+overall plan expiry are displayed separately.
