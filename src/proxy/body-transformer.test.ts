@@ -208,6 +208,11 @@ function withEnvPromptVars<T>(fn: () => T): T {
 }
 
 describe("transformRequestBody — start-plan system (Anthropic)", () => {
+  it("preserves the selected GLM-5.3 model for model-specific start-plan quota", () => {
+    const out = transformRequestBody(JSON.stringify({ model: "glm-5.3", messages: [] }), { format: "anthropic", startPlan: true, provider: "bigmodel" });
+    expect(JSON.parse(out as string).model).toBe("glm-5.3");
+  });
+
   it("prepends three official blocks in the ContextBuilder shape with real env values", () => {
     const body = JSON.stringify({
       model: "glm-5.2",

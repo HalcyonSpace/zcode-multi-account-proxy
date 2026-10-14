@@ -70,10 +70,7 @@ export function transformRequestBody(body: string | undefined, ctx: TransformCon
   if (ctx.format === "anthropic") {
     const obj = parsed as Record<string, unknown>;
     if (ctx.startPlan) {
-      if (typeof obj.model === "string" && /^glm-5\.3$/i.test(obj.model.trim())) {
-        obj.model = "glm-5.3-flash";
-        modified = true;
-      }
+      // Preserve the model selected by the caller. Start-plan quotas are model-specific.
       modified = applyStartPlanSystem(obj, ctx.provider) || modified;
     }
     modified = applyAnthropicCacheControl(obj) || modified;
